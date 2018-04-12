@@ -21,17 +21,26 @@ import RPi.GPIO as GPIO
 Function definitions:
 """
 def machine_state_change(pin):
+    # AWS IoT topic to publish to:
     topic = "me/home/laundry"
-    if GPIO.input(pin):     # if GPIO is HIGH (button RELEASED/UP) at time of edge detection
-        time_stopped = datetime.datetime.now()
-        msg = "{} - Machine has stopped.".format(time_stopped)
-        print(msg)
-        # aws_publish(topic, msg)
-    else:                   # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
+    # Min vibration time to declare washer was running:
+    min_delta = datetime.timedelta(seconds = 5)
+    if not GPIO.input(pin):     # if GPIO is HIGH (button RELEASED/UP) at time of edge detection
+        global time_started
         time_started = datetime.datetime.now()
         msg = "{} - Machine has started.".format(time_started)
         print(msg)
         # aws_publish(topic, msg)
+    else:                       # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
+        global time_stopped
+        time_stopped = datetime.datetime.now()
+        if time_stopped - time_started > min_delta:
+            msg = "{} - Machine has stopped.".format(time_stopped)
+            print(msg)
+            # aws_publish(topic, msg)
+        else:
+            print('False alarm...')                   
+        
 
 
 # Publish message to AWS IoT topic
@@ -66,7 +75,7 @@ def main():
     # Detect both Rising/Falling edge (GPIO LOW to HIGH and vice versa).
     # Callback is on its own thread, will trigger regardless what else is going on in program.
     # Bouncetime prevents quick multiple edge detections.
-    GPIO.add_event_detect(pin, GPIO.BOTH, callback=machine_state_change, bouncetime=1000)
+    GPIO.add_event_detect(pin, GPIO.BOTH, callback=machine_state_change, bouncetime=300)
     try:
         # Loop forever
         while True:
