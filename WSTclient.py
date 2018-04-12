@@ -5,9 +5,12 @@ Last Updated:
 Name:           laundryDetector
 """
 
-# import libraries
+
+"""
+Import libraries
+"""
 import sys
-import time
+from time import sleep
 import datetime
 import logging
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
@@ -15,23 +18,20 @@ import RPi.GPIO as GPIO
 
 
 """
-# Function definitions:
+Function definitions:
 """
-
-
 def machine_state_change(pin):
-    if GPIO.RISING:
-        time_started = datetime.datetime.now()
-        msg = "{} - Machine has started.".format(time_started)
-        print(msg)
-        # aws_publish(topic, msg)
-        main()
-    else:
+    topic = "me/home/laundry"
+    if GPIO.input(pin):
         time_stopped = datetime.datetime.now()
         msg = "{} - Machine has stopped.".format(time_stopped)
         print(msg)
         # aws_publish(topic, msg)
-        main()
+    else:
+        time_started = datetime.datetime.now()
+        msg = "{} - Machine has started.".format(time_started)
+        print(msg)
+        # aws_publish(topic, msg)
 
 
 def aws_publish(topic, payload):
@@ -58,20 +58,21 @@ def custom_puback_callback(mid):
 
 
 def main():
-    sensorPin = 23
-    GPIO.cleanup()
+    pin = 23
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(sensorPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(sensorPin, GPIO.BOTH, callback=machine_state_change, bouncetime=3000)
-    if not GPIO.event_detected(sensorPin):
-        print('Waiting for button to be pressed...')
-        time.sleep(3)
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(pin, GPIO.BOTH, callback=machine_state_change, bouncetime=1000)
+    try:
+        while True:
+            continue
+    except:
+        print('Exiting, clearing GPIO states...')
+        GPIO.cleanup()
+
 
 """
-Initialize variables:
+Initialize variables
 """
-# AWS IoT vars:
-topic = "me/home/laundry"
 
 # Configure logging:
 logger = logging.getLogger("AWSIoTPythonSDK.core")
