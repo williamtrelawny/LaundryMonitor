@@ -22,18 +22,19 @@ Function definitions:
 """
 def machine_state_change(pin):
     topic = "me/home/laundry"
-    if GPIO.input(pin):
+    if GPIO.input(pin):     # if GPIO is HIGH (button RELEASED/UP) at time of edge detection
         time_stopped = datetime.datetime.now()
         msg = "{} - Machine has stopped.".format(time_stopped)
         print(msg)
         # aws_publish(topic, msg)
-    else:
+    else:                   # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
         time_started = datetime.datetime.now()
         msg = "{} - Machine has started.".format(time_started)
         print(msg)
         # aws_publish(topic, msg)
 
 
+# Publish message to AWS IoT topic
 def aws_publish(topic, payload):
     myMQTTClient = AWSIoTMQTTClient("laundryDetector")
     myMQTTClient.configureEndpoint("a2bgly5s92f7bm.iot.us-east-1.amazonaws.com", 8883)
@@ -56,16 +57,22 @@ def custom_puback_callback(mid):
     print("Received PUBACK packet id {} on Topic {}".format(mid, topic))
     print("=" * 20 + "\n")
 
-
+# Main program loop
 def main():
+    # init GPIO vars
     pin = 23
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    # Detect both Rising/Falling edge (GPIO LOW to HIGH and vice versa).
+    # Callback is on its own thread, will trigger regardless what else is going on in program.
+    # Bouncetime prevents quick multiple edge detections.
     GPIO.add_event_detect(pin, GPIO.BOTH, callback=machine_state_change, bouncetime=1000)
     try:
+        # Loop forever
         while True:
             continue
     except:
+        # Keyboard Interrupt, clear GPIO states
         print('Exiting, clearing GPIO states...')
         GPIO.cleanup()
 
@@ -74,7 +81,7 @@ def main():
 Initialize variables
 """
 
-# Configure logging:
+# Configure AWS debug logging:
 logger = logging.getLogger("AWSIoTPythonSDK.core")
 logger.setLevel(logging.DEBUG)
 streamHandler = logging.StreamHandler()
