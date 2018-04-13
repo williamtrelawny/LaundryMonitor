@@ -12,7 +12,7 @@ Import libraries
 
 import time
 import datetime as dt
-# import logging
+import logging
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import RPi.GPIO as GPIO
 from functools import partial
@@ -43,7 +43,7 @@ def setup():
     min_start_delta = 5               
     min_stop_delta = 5                   
     topic = "me/home/laundry"           # AWS IoT topic to publish to:
-    pin = 23
+    pin = 14
     GPIO.cleanup()
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
