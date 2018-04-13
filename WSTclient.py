@@ -12,34 +12,37 @@ Import libraries
 import time
 import datetime as dt
 import logging
+from pytz import timezone, utc
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import RPi.GPIO as GPIO
 from functools import partial
-import logging
 
+# Create logger object:
+log = logging.getLogger(__name__)
 
 """
 Configure logging:
 """
 
-# Setup global logger params:
-logging.basicConfig(
-    filename='/opt/omni/var/log/LaundryDetector.log',
-    level=logging.DEBUG,
-    format='%(asctime)s : %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
+def custom_logger():
+    # Setup global logger params:
+    logging.basicConfig(
+        filename='/opt/omni/var/log/LaundryDetector.log',
+        level=logging.DEBUG,
+        format='%(asctime)s : %(levelname)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S'
     )
-
-# Create individual loggers:
-logger_main = logging.getLogger('LaundryDetector')
-logger_aws = logging.getLogger("AWSIoTPythonSDK.core")
-
+    logging.Formatter.converter = time.gmtime
+    # Start program execution:
+    log.debug('Launching program...')
+    return log 
 
 """
 Function definitions:
 """
 
-def setup():
-    logger_main.debug('Running setup script...')
+
+def setup(log):
+    log.debug('Running setup script...')
     min_start_delta = 5               
     min_stop_delta = 5                   
     topic = "me/home/laundry"           # AWS IoT topic to publish to:
@@ -50,19 +53,20 @@ def setup():
     # Detect both Rising/Falling edge (GPIO LOW to HIGH and vice versa).
     # Callback is on its own thread, will trigger regardless what else is going on in program.
     # Bouncetime prevents quick multiple edge detections.
-    logger_main.debug('Adding edge detection on GPIO pin...')                          
+    log.debug('Adding edge detection on GPIO pin...')                          
     GPIO.add_event_detect(pin, GPIO.BOTH, callback=partial(machine_state_change, topic, min_start_delta, min_stop_delta), bouncetime=(min_start_delta * 5000))
+    log.debug('Sensor initialized. Ready for input...')                                               
 
 
-def machine_state_change(topic, min_start_delta, min_stop_delta, pin):
+def machine_state_change(log, topic, min_start_delta, min_stop_delta, pin):
     if not GPIO.input(pin):             # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
-        machine_starting(topic, min_start_delta, min_stop_delta, pin)
+        machine_starting(log, topic, min_start_delta, min_stop_delta, pin)
     else:
-        machine_stopping(topic, min_start_delta, min_stop_delta, pin)
+        machine_stopping(log, topic, min_start_delta, min_stop_delta, pin)
 
         
-def machine_starting(topic, min_start_delta, min_stop_delta, pin):
-    logger_main.debug('Button is pressed.')
+def machine_starting(topic, min_start_delta, min_stop_delta, pin, log):
+    log.debug('Button is pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
     min_stop_delta = dt.timedelta(seconds = 5)            # Min vibration time to declare washer has finished
     t1 = dt.datetime.now()                                # Set temp var 't1' as time vibration started.
@@ -72,15 +76,15 @@ def machine_starting(topic, min_start_delta, min_stop_delta, pin):
         pass
     else:                                                              # Do nothing until 't1' is greater than min start vibration time
         if not GPIO.input(pin):
-            logger_main.info('Machine has started.')     # AND GPIO is still reading LOW (still vibrating),
+            log.info('Machine has started.')     # AND GPIO is still reading LOW (still vibrating),
             # msg = _________                                              # then print message and publish to AWS.
             # aws_publish(topic, msg)
         else:
-            logger_main.info('False start alarm...')
+            log.info('False start alarm...')
 
 
-def machine_stopping(topic, min_start_delta, min_stop_delta, pin):
-    logger_main.debug('Button is not pressed.')
+def machine_stopping(topic, min_start_delta, min_stop_delta, pin, log):
+    log.debug('Button is not pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
     min_stop_delta = dt.timedelta(seconds = 5)            # Min vibration time to declare washer has finished
     t1 = dt.datetime.now()
@@ -90,11 +94,11 @@ def machine_stopping(topic, min_start_delta, min_stop_delta, pin):
         pass
     else:
         if GPIO.input(pin):
-            logger_main.info('Machine has stopped.')
+            log.info('Machine has stopped.')
             # msg = __________________
             # aws_publish(topic, msg)
         else:
-            logger_main.info('False stop alarm...')
+            log.info('False stop alarm...')
 
 
 # Publish message to AWS IoT topic
@@ -112,7 +116,6 @@ def aws_publish(topic, payload):
     myMQTTClient.publishAsync(topic, payload, 1, ackCallback=custom_puback_callback)
     myMQTTClient.unsubscribe(topic)
     myMQTTClient.disconnect()
-    setup()
 
 
 # Custom PUBACK callback
@@ -123,18 +126,17 @@ def custom_puback_callback(mid, topic):
 
 
 # Main program loop
-def main():
-    logger_main.debug('Launching program...')                                                    
-    setup()
+def main(log):
+    custom_logger()                                        
+    setup(log)
     try:
         # Loop forever
-        logger_main.debug('Sensor initialized. Ready for input...')                                               
         while True:
             continue
     except:
         # Keyboard Interrupt, clear GPIO states
-        logger_main.debug('Exiting, clearing GPIO states...')
+        log.debug('Exiting, clearing GPIO states...')
         GPIO.cleanup()
 
 # start the program execution:
-main()
+main(log)
