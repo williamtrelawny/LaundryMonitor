@@ -120,9 +120,7 @@ def aws_publish(topic, payload):
 
 # Custom PUBACK callback
 def custom_puback_callback(mid, topic):
-    print("\n" + "=" * 20)
     print("Received PUBACK packet id {} on Topic {}".format(mid, topic))
-    print("=" * 20 + "\n")
 
 
 # Main program loop
