@@ -1,10 +1,9 @@
 """
 Author:         William Trelawny
 Date:           4/10/18
-Last Updated:
-Name:           laundryDetector
+Last Updated:   4/13/18
+Name:           LaundryDetector
 """
-
 
 """
 Import libraries
@@ -17,6 +16,7 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 import RPi.GPIO as GPIO
 from functools import partial
 import logging
+
 
 """
 Configure logging:
@@ -53,13 +53,14 @@ def setup():
     logger_main.debug('Adding edge detection on GPIO pin...')                          
     GPIO.add_event_detect(pin, GPIO.BOTH, callback=partial(machine_state_change, topic, min_start_delta, min_stop_delta), bouncetime=(min_start_delta * 5000))
 
+
 def machine_state_change(topic, min_start_delta, min_stop_delta, pin):
     if not GPIO.input(pin):             # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
         machine_starting(topic, min_start_delta, min_stop_delta, pin)
     else:
         machine_stopping(topic, min_start_delta, min_stop_delta, pin)
-            
 
+        
 def machine_starting(topic, min_start_delta, min_stop_delta, pin):
     logger_main.debug('Button is pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
@@ -135,15 +136,5 @@ def main():
         logger_main.debug('Exiting, clearing GPIO states...')
         GPIO.cleanup()
 
-
-"""
-Initialize variables
-"""
-
-timefmt = "%Y-%m-%d,%H:%M:%S"
-
 # start the program execution:
 main()
-
-
-#    logger_main.debug('{} - Running setup script...'.format(time.strftime(timefmt, time.localtime())))
