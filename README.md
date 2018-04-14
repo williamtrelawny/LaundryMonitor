@@ -1,45 +1,53 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# LaundryDetector
+---
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+This is a simple service that notifies users via SMS when a washer or dryer appliance has finished its cycle. It allows users to go on about their day
+after starting a load of laundry, and not have to worry about staying within earshot of the laundry room.
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+1. [Overview](#overview)
+2. [TO-DO](#todo)
+3. [License](#license)
 
 ---
 
-## Edit a file
+## <a name="overview"></a>Overview
+--
+This document provides details on how LaundryDetector works, including configurable parameters to customize for each user's unique situations.
+It also includes a [To-Do](#ToDo) section that briefly goes over what still needs to get done, as well as design goals for the project.
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+### sub-heading
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
 
----
+## <a name="todo"></a>TO-DO
+--
 
-## Create a file
+1. **More accurate logic**
+The decision-making, ("washer has started/finished") including false alarm detection needs to be improved. I designed the program based on the assumption
+that within a washer/dryer cycle, vibration would be *constant*. The false alarm detection was only for dealing with the lapses in vibration *between* cycles.
+I need to implement a more robust system that 1) isn't triggering a ton of false alarms (like now), and 2) persists through the small and frequent lapses
+in vibration throughout the entire wash/dry loop.
 
-Next, you’ll add a new file to this repository.
+2. **Settings file**
+I'd like to incorporate an external settings file that LaundryDetector.py can reference for initializing variables, like pin, min_start/stop_delta, aws stuff, etc.
+I just don't know how to do this yet, but I'm sure it's not too difficult (though I probably just jinxed myself...).
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+3. **UI for changing Settings**
+Even if it's just a simple bash shell UI with numbered options. Once I have the framework in place, I can expand from there as needed.
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+4. **Project Restructuring**
+This is my first major application development project, so I'm sure I haven't properly set up things like file/folder hierarchy, project-level
+global variables, etc., as referenced in [this excellent StackExchange answer](https://stackoverflow.com/a/43794480/4166505) by what appears to be someone very experienced in large projects.
 
----
+5. **Test other attachment methods *(?)***
+I have a feeling the adhesive velcro dampens the vibrations reaching the sensor, because during a wash loop it only detected vibration during the final
+spin cycle. And on the dryer loop, it would detect starting, then detect starting again without detecting stopping first (though that may be a design flaw...).
 
-## Clone a repository
+6. **Use different detection mechanism *(?)***
+Honeslty, I'm not a big fan of vibration as the sole detection method- it's extremely indirect and exposed to a multitude of 3rd party interference. It was just the quickest
+and easiest solution to get this project on the road. First alternative that pops into my head is measuring amp levels, assuming that when washing/drying there is a noticeable increase from idle.
+But I'll have to do more research of course, and make sure I find something that is common across appliances from all manufacturers and form factors.
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
-
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
-
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+## <a name=license></a>License
+--
+idfk which [license](https://choosealicense.com/) to [pick](https://www.cio.com/article/2382115/open-source-tools/how-to-choose-the-best-license-for-your-open-source-software-project.html), so I'm just going to leave it "unlicensed" for now (which theoretically *forbids* anyone from using it at all).
+This is really a non-issue at this early stage anyway, but I thought I'd at least include it in the README.
