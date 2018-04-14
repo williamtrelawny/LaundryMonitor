@@ -36,16 +36,15 @@ def custom_logger():
     log.debug('Launching program...')
     return log 
 
+
 """
 Function definitions:
 """
 
-
 def setup(log):
     log.debug('Running setup script...')
-    min_start_delta = 5               
-    min_stop_delta = 5                   
-    topic = "me/home/laundry"           # AWS IoT topic to publish to:
+    min_start_delta = 10               
+    min_stop_delta = 10                   
     pin = 14
     GPIO.cleanup()
     GPIO.setmode(GPIO.BCM)
@@ -54,18 +53,18 @@ def setup(log):
     # Callback is on its own thread, will trigger regardless what else is going on in program.
     # Bouncetime prevents quick multiple edge detections.
     log.debug('Adding edge detection on GPIO pin...')                          
-    GPIO.add_event_detect(pin, GPIO.BOTH, callback=partial(machine_state_change, topic, min_start_delta, min_stop_delta), bouncetime=(min_start_delta * 5000))
+    GPIO.add_event_detect(pin, GPIO.BOTH, callback=partial(machine_state_change, min_start_delta, min_stop_delta), bouncetime=(min_start_delta * 5000))
     log.debug('Sensor initialized. Ready for input...')                                               
 
 
-def machine_state_change(log, topic, min_start_delta, min_stop_delta, pin):
+def machine_state_change(log, min_start_delta, min_stop_delta, pin):
     if not GPIO.input(pin):             # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
-        machine_starting(log, topic, min_start_delta, min_stop_delta, pin)
+        machine_starting(log, min_start_delta, min_stop_delta, pin)
     else:
-        machine_stopping(log, topic, min_start_delta, min_stop_delta, pin)
+        machine_stopping(log, min_start_delta, min_stop_delta, pin)
 
         
-def machine_starting(topic, min_start_delta, min_stop_delta, pin, log):
+def machine_starting(min_start_delta, min_stop_delta, pin, log):
     log.debug('Button is pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
     min_stop_delta = dt.timedelta(seconds = 5)            # Min vibration time to declare washer has finished
@@ -76,14 +75,14 @@ def machine_starting(topic, min_start_delta, min_stop_delta, pin, log):
         pass
     else:                                                              # Do nothing until 't1' is greater than min start vibration time
         if not GPIO.input(pin):
-            log.info('Machine has started.')     # AND GPIO is still reading LOW (still vibrating),
-            # msg = _________                                              # then print message and publish to AWS.
-            # aws_publish(topic, msg)
+            msg = 'Washer has started.'                                              # then print message and publish to AWS.
+            log.info(msg)     # AND GPIO is still reading LOW (still vibrating),
+            # aws_publish(msg)           # commenting out unless i think i need it.
         else:
             log.info('False start alarm...')
 
 
-def machine_stopping(topic, min_start_delta, min_stop_delta, pin, log):
+def machine_stopping(min_start_delta, min_stop_delta, pin, log):
     log.debug('Button is not pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
     min_stop_delta = dt.timedelta(seconds = 5)            # Min vibration time to declare washer has finished
@@ -94,19 +93,20 @@ def machine_stopping(topic, min_start_delta, min_stop_delta, pin, log):
         pass
     else:
         if GPIO.input(pin):
-            log.info('Machine has stopped.')
-            # msg = __________________
-            # aws_publish(topic, msg)
+            msg = 'Washer has finished :)'
+            log.info(msg)
+            aws_publish(msg)
         else:
             log.info('False stop alarm...')
 
 
 # Publish message to AWS IoT topic
-def aws_publish(topic, payload):
+def aws_publish(payload):
     myMQTTClient = AWSIoTMQTTClient("laundryDetector")
     myMQTTClient.configureEndpoint("a2bgly5s92f7bm.iot.us-east-1.amazonaws.com", 8883)
     myMQTTClient.configureCredentials("/opt/omni/aws/certs/rootCA", "/opt/omni/aws/certs/cbb0d2f3f1-private.pem.key",
                                       "/opt/omni/aws/certs/cbb0d2f3f1-certificate.pem.crt")
+    topic = "me/home/laundry"           # AWS IoT topic to publish to:
     myMQTTClient.configureAutoReconnectBackoffTime(1, 32, 20)
     myMQTTClient.configureOfflinePublishQueueing(-1)  # Infinite offline Publish queueing
     myMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
