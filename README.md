@@ -10,8 +10,8 @@ after starting a load of laundry, and not have to worry about staying within ear
 
 ---
 
-## Overview
---
+## <a id="overview"></a>Overview
+
 This document provides details on how LaundryDetector works, including configurable parameters to customize for each user's unique situations.
 It also includes a [To-Do](#ToDo) section that briefly goes over what still needs to get done, as well as design goals for the project.
 
@@ -19,7 +19,6 @@ It also includes a [To-Do](#ToDo) section that briefly goes over what still need
 
 
 ## TO-DO
---
 
 1. **More accurate logic**
 The decision-making, ("washer has started/finished") including false alarm detection needs to be improved. I designed the program based on the assumption
@@ -48,6 +47,6 @@ and easiest solution to get this project on the road. First alternative that pop
 But I'll have to do more research of course, and make sure I find something that is common across appliances from all manufacturers and form factors.
 
 ## License
---
+
 idfk which [license](https://choosealicense.com/) to [pick](https://www.cio.com/article/2382115/open-source-tools/how-to-choose-the-best-license-for-your-open-source-software-project.html), so I'm just going to leave it "unlicensed" for now (which theoretically *forbids* anyone from using it at all).
 This is really a non-issue at this early stage anyway, but I thought I'd at least include it in the README.
