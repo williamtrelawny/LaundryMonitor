@@ -45,26 +45,26 @@ def setup(log):
     log.debug('Running setup script...')
     min_start_delta = 10               
     min_stop_delta = 10                   
-    pin = 14
-    GPIO.cleanup()
+    pin = 17
+    # GPIO.cleanup()                # commenting out until I know where to put this
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     # Detect both Rising/Falling edge (GPIO LOW to HIGH and vice versa).
     # Callback is on its own thread, will trigger regardless what else is going on in program.
     # Bouncetime prevents quick multiple edge detections.
     log.debug('Adding edge detection on GPIO pin...')                          
-    GPIO.add_event_detect(pin, GPIO.BOTH, callback=partial(machine_state_change, min_start_delta, min_stop_delta), bouncetime=(min_start_delta * 5000))
+    GPIO.add_event_detect(pin, GPIO.BOTH, callback=partial(machine_state_change, min_start_delta, min_stop_delta, pin), bouncetime=(min_start_delta * 5000))
     log.debug('Sensor initialized. Ready for input...')                                               
 
 
-def machine_state_change(log, min_start_delta, min_stop_delta, pin):
+def machine_state_change(self, min_start_delta, min_stop_delta, pin):
     if not GPIO.input(pin):             # if GPIO is LOW (button PRESSED/DOWN) at time of edge detection
-        machine_starting(log, min_start_delta, min_stop_delta, pin)
+        machine_starting(min_start_delta, min_stop_delta, pin)
     else:
-        machine_stopping(log, min_start_delta, min_stop_delta, pin)
+        machine_stopping(min_start_delta, min_stop_delta, pin)
 
         
-def machine_starting(min_start_delta, min_stop_delta, pin, log):
+def machine_starting(min_start_delta, min_stop_delta, pin):
     log.debug('Button is pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
     min_stop_delta = dt.timedelta(seconds = 5)            # Min vibration time to declare washer has finished
@@ -82,7 +82,7 @@ def machine_starting(min_start_delta, min_stop_delta, pin, log):
             log.info('False start alarm...')
 
 
-def machine_stopping(min_start_delta, min_stop_delta, pin, log):
+def machine_stopping(min_start_delta, min_stop_delta, pin):
     log.debug('Button is not pressed.')
     min_start_delta = dt.timedelta(seconds = 5)           # Min vibration time to declare washer has started
     min_stop_delta = dt.timedelta(seconds = 5)            # Min vibration time to declare washer has finished
@@ -124,7 +124,7 @@ def custom_puback_callback(mid, topic):
 
 
 # Main program loop
-def main(log):
+def main():
     custom_logger()                                        
     setup(log)
     try:
@@ -137,4 +137,4 @@ def main(log):
         GPIO.cleanup()
 
 # start the program execution:
-main(log)
+main()
