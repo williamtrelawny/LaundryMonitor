@@ -4,7 +4,7 @@
 This is a simple service that notifies users via SMS when a washer or dryer appliance has finished its cycle. It allows users to go on about their day
 after starting a load of laundry, and not have to worry about staying within earshot of the laundry room.
 
-1. [Overview][#overview]
+1. [Overview](#overview)
 2. [TO-DO](#todo)
 3. [License](#license)
 
