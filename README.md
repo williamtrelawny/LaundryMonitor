@@ -4,13 +4,13 @@
 This is a simple service that notifies users via SMS when a washer or dryer appliance has finished its cycle. It allows users to go on about their day
 after starting a load of laundry, and not have to worry about staying within earshot of the laundry room.
 
-1. [Overview][overview]
+1. [Overview][#overview]
 2. [TO-DO](#todo)
 3. [License](#license)
 
 ---
 
-## Overview
+## <a name="overview"></a>
 
 This document provides details on how LaundryDetector works, including configurable parameters to customize for each user's unique situations.
 It also includes a [To-Do](#ToDo) section that briefly goes over what still needs to get done, as well as design goals for the project.
